@@ -143,4 +143,32 @@ const updateStudent = async (req, res) => {
   }
 };
 
-module.exports = { createStudent, getStudents, getStudentById, updateStudent };
+const deleteStudent = async (req, res) => {
+  // 1. Check the id in the URL
+  const id = parseInt(req.params.id);
+
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ message: "Student id must be a number" });
+  }
+
+  // 2. Delete the student
+  try {
+    await prisma.student.delete({ where: { id } });
+    return res.status(204).send();
+  } catch (error) {
+    // P2025 is Prisma's code for "record to delete not found"
+    if (error.code === "P2025") {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    console.error(error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+module.exports = {
+  createStudent,
+  getStudents,
+  getStudentById,
+  updateStudent,
+  deleteStudent,
+};
