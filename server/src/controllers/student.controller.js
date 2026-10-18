@@ -31,4 +31,49 @@ const createStudent = async (req, res) => {
   }
 };
 
-module.exports = { createStudent };
+const getStudents = async (req, res) => {
+  // 1. Read page, limit and search from the URL, with safe defaults
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 100);
+  const search = req.query.search?.trim();
+
+  // 2. Build the search filter (empty filter = match everything)
+  const where = search
+    ? {
+        OR: [
+          { firstName: { contains: search, mode: "insensitive" } },
+          { lastName: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+          { rollNumber: { contains: search, mode: "insensitive" } },
+        ],
+      }
+    : {};
+
+  try {
+    // 3. Fetch one page of students and the total count at the same time
+    const [students, total] = await Promise.all([
+      prisma.student.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.student.count({ where }),
+    ]);
+
+    return res.json({
+      data: students,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+module.exports = { createStudent, getStudents };
