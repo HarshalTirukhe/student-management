@@ -76,4 +76,28 @@ const getStudents = async (req, res) => {
   }
 };
 
-module.exports = { createStudent, getStudents };
+const getStudentById = async (req, res) => {
+  // 1. Read the id from the URL and make sure it's a real number
+  const id = parseInt(req.params.id);
+
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ message: "Student id must be a number" });
+  }
+
+  try {
+    // 2. Look the student up
+    const student = await prisma.student.findUnique({ where: { id } });
+
+    // 3. Nothing found: tell the client clearly
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    return res.json(student);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+module.exports = { createStudent, getStudents, getStudentById };
