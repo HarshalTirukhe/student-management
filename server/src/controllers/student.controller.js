@@ -100,4 +100,47 @@ const getStudentById = async (req, res) => {
   }
 };
 
-module.exports = { createStudent, getStudents, getStudentById };
+const updateStudent = async (req, res) => {
+  // 1. Check the id in the URL
+  const id = parseInt(req.params.id);
+
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ message: "Student id must be a number" });
+  }
+
+  // 2. Validate the new data (same rules as creating)
+  const result = createStudentSchema.safeParse(req.body);
+
+  if (!result.success) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: result.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      })),
+    });
+  }
+
+  // 3. Save the changes
+  try {
+    const student = await prisma.student.update({
+      where: { id },
+      data: result.data,
+    });
+    return res.json(student);
+  } catch (error) {
+    // P2025 is Prisma's code for "record to update not found"
+    if (error.code === "P2025") {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        message: `A student with this ${error.meta.target.join(", ")} already exists`,
+      });
+    }
+    console.error(error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+module.exports = { createStudent, getStudents, getStudentById, updateStudent };
