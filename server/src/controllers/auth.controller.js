@@ -67,4 +67,18 @@ const login = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { register, login };
+const getMe = asyncHandler(async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: { id: true, name: true, email: true, role: true, createdAt: true },
+  });
+
+  // The token is valid, but the account may have been deleted since
+  if (!user) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+
+  res.json(user);
+});
+
+module.exports = { register, login, getMe };
