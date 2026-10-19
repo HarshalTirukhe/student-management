@@ -7,7 +7,7 @@ const errorHandler = (err, req, res, next) => {
   // Unique value already exists
   if (err.code === "P2002") {
     return res.status(409).json({
-      message: `A student with this ${err.meta.target.join(", ")} already exists`,
+      message: `A record with this ${err.meta.target.join(", ")} already exists`,
     });
   }
 

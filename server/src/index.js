@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const studentRoutes = require('./routes/student.routes');
 const errorHandler = require('./middleware/errorHandler');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 app.use(cors());
@@ -13,6 +14,8 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/students', studentRoutes);
+
+app.use('/api/auth', authRoutes);
 
 app.use(errorHandler);
 
