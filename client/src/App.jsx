@@ -1,20 +1,19 @@
-import { useEffect, useState } from "react";
-import { apiRequest } from "./lib/api";
+import { Navigate, Route, Routes } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
+import StudentsPage from "./pages/StudentsPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  const [status, setStatus] = useState("checking...");
-
-  useEffect(() => {
-    apiRequest("/health")
-      .then((data) => setStatus(data.status))
-      .catch(() => setStatus("cannot reach the server"));
-  }, []);
-
   return (
-    <div>
-      <h1>Student Management System</h1>
-      <p>Backend status: {status}</p>
-    </div>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/students" element={<StudentsPage />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/students" replace />} />
+    </Routes>
   );
 }
 
