@@ -11,6 +11,9 @@ function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/students" element={<StudentsPage />} />
+      </Route>
+
+      <Route element={<ProtectedRoute roles={["ADMIN"]} />}>
         <Route path="/students/new" element={<StudentFormPage />} />
         <Route path="/students/:id/edit" element={<StudentFormPage />} />
       </Route>
