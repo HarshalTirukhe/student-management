@@ -1,21 +1,26 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const studentRoutes = require('./routes/student.routes');
-const errorHandler = require('./middleware/errorHandler');
-const authRoutes = require('./routes/auth.routes');
+require("dotenv").config();
+require("./config/env");
+const express = require("express");
+const cors = require("cors");
+const studentRoutes = require("./routes/student.routes");
+const errorHandler = require("./middleware/errorHandler");
+const authRoutes = require("./routes/auth.routes");
 
 const app = express();
-app.use(cors());
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim());
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
-app.use('/api/students', studentRoutes);
+app.use("/api/students", studentRoutes);
 
-app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use(errorHandler);
 
