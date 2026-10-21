@@ -91,7 +91,7 @@ function StudentsPage() {
 
   return (
     <div>
-      <h1>Students</h1>
+            <h1 className="text-3xl font-bold text-blue-600">Students</h1>
 
       {isAdmin && (
         <p>
