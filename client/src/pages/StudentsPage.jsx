@@ -15,6 +15,7 @@ function StudentsPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reloadCount, setReloadCount] = useState(0);
 
   const debouncedSearch = useDebounce(search);
 
@@ -53,11 +54,37 @@ function StudentsPage() {
     return () => {
       ignore = true;
     };
-  }, [token, page, debouncedSearch, logout]);
+  }, [token, page, debouncedSearch, logout, reloadCount]);
 
   const handleSearchChange = (event) => {
     setSearch(event.target.value);
     setPage(1);
+  };
+
+  const handleDelete = async (student) => {
+    const confirmed = window.confirm(
+      `Delete ${student.firstName} ${student.lastName}? This cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    setError("");
+
+    try {
+      await apiRequest(`/api/students/${student.id}`, {
+        method: "DELETE",
+        token,
+      });
+
+      // Deleted the last row on a page? Step back one page.
+      if (students.length === 1 && page > 1) {
+        setPage((p) => p - 1);
+      } else {
+        setReloadCount((c) => c + 1);
+      }
+    } catch (err) {
+      if (err.status === 401) logout();
+      else setError(err.message);
+    }
   };
 
   const totalPages = Math.max(pagination?.totalPages ?? 1, 1);
@@ -110,6 +137,14 @@ function StudentsPage() {
                 <td>{new Date(student.dateOfBirth).toLocaleDateString()}</td>
                 <td>
                   <Link to={`/students/${student.id}/edit`}>Edit</Link>
+                  {user?.role === "ADMIN" && (
+                    <>
+                      {" "}
+                      <button onClick={() => handleDelete(student)}>
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
