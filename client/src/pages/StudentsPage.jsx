@@ -8,7 +8,7 @@ const PAGE_SIZE = 10;
 
 function StudentsPage() {
   const { token, user, logout } = useAuth();
-
+  const isAdmin = user?.role === "ADMIN";
   const [students, setStudents] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [page, setPage] = useState(1);
@@ -97,9 +97,11 @@ function StudentsPage() {
         <button onClick={logout}>Log out</button>
       </p>
 
-      <p>
-        <Link to="/students/new">Add student</Link>
-      </p>
+      {isAdmin && (
+        <p>
+          <Link to="/students/new">Add student</Link>
+        </p>
+      )}
 
       <input
         type="search"
@@ -122,7 +124,7 @@ function StudentsPage() {
               <th>Email</th>
               <th>Course</th>
               <th>Date of birth</th>
-              <th>Actions</th>
+              {isAdmin && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -135,17 +137,14 @@ function StudentsPage() {
                 <td>{student.email}</td>
                 <td>{student.course}</td>
                 <td>{new Date(student.dateOfBirth).toLocaleDateString()}</td>
-                <td>
-                  <Link to={`/students/${student.id}/edit`}>Edit</Link>
-                  {user?.role === "ADMIN" && (
-                    <>
-                      {" "}
-                      <button onClick={() => handleDelete(student)}>
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </td>
+                {isAdmin && (
+                  <td>
+                    <Link to={`/students/${student.id}/edit`}>Edit</Link>{" "}
+                    <button onClick={() => handleDelete(student)}>
+                      Delete
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
