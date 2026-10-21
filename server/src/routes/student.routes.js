@@ -14,12 +14,13 @@ const router = express.Router();
 // Every student route requires a logged-in user
 router.use(authenticate);
 
-router.post("/", createStudent);
+// Everyone logged in can read
 router.get("/", getStudents);
 router.get("/:id", getStudentById);
-router.put("/:id", updateStudent);
 
-// Only admins can delete
+// Only admins can change data
+router.post("/", authorize("ADMIN"), createStudent);
+router.put("/:id", authorize("ADMIN"), updateStudent);
 router.delete("/:id", authorize("ADMIN"), deleteStudent);
 
 module.exports = router;
