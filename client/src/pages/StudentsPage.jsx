@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/useAuth";
 import { useDebounce } from "../hooks/useDebounce";
+import { Link } from "react-router-dom";
 
 const PAGE_SIZE = 10;
 
@@ -69,6 +70,10 @@ function StudentsPage() {
         <button onClick={logout}>Log out</button>
       </p>
 
+      <p>
+        <Link to="/students/new">Add student</Link>
+      </p>
+
       <input
         type="search"
         placeholder="Search by name, email or roll number"
@@ -79,9 +84,7 @@ function StudentsPage() {
       {error && <p role="alert">{error}</p>}
       {loading && <p>Loading...</p>}
 
-      {!loading && !error && students.length === 0 && (
-        <p>No students found.</p>
-      )}
+      {!loading && !error && students.length === 0 && <p>No students found.</p>}
 
       {students.length > 0 && (
         <table>
@@ -92,6 +95,7 @@ function StudentsPage() {
               <th>Email</th>
               <th>Course</th>
               <th>Date of birth</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -104,6 +108,9 @@ function StudentsPage() {
                 <td>{student.email}</td>
                 <td>{student.course}</td>
                 <td>{new Date(student.dateOfBirth).toLocaleDateString()}</td>
+                <td>
+                  <Link to={`/students/${student.id}/edit`}>Edit</Link>
+                </td>
               </tr>
             ))}
           </tbody>

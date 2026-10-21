@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import StudentsPage from "./pages/StudentsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import StudentFormPage from "./pages/StudentFormPage";
 
 function App() {
   return (
@@ -10,6 +11,8 @@ function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/students" element={<StudentsPage />} />
+        <Route path="/students/new" element={<StudentFormPage />} />
+        <Route path="/students/:id/edit" element={<StudentFormPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/students" replace />} />
