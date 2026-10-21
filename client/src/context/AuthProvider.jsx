@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { apiRequest } from "../lib/api";
 import { AuthContext } from "./auth-context";
 
@@ -26,12 +26,12 @@ export function AuthProvider({ children }) {
     setUser(data.user);
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setToken(null);
     setUser(null);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ token, user, login, logout }}>
