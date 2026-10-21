@@ -63,24 +63,37 @@ function StudentFormPage() {
   };
 
   return (
-    <div>
-      <h1>{isEdit ? "Edit student" : "Add student"}</h1>
+    <div className="mx-auto max-w-2xl">
+      <Link
+        to="/students"
+        className="text-sm font-medium text-gray-500 hover:text-gray-700"
+      >
+        ← Back to students
+      </Link>
 
-      {loading && <p>Loading...</p>}
+      <h1 className="mt-2 text-2xl font-bold text-gray-900">
+        {isEdit ? "Edit student" : "Add student"}
+      </h1>
+
+      {loading && <p className="mt-6 text-sm text-gray-500">Loading...</p>}
 
       {loadError && (
-        <div>
-          <p role="alert">{loadError}</p>
-          <Link to="/students">Back to students</Link>
-        </div>
+        <p
+          role="alert"
+          className="mt-6 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          {loadError}
+        </p>
       )}
 
       {!loading && !loadError && (
-        <StudentForm
-          initialValues={initialValues ?? undefined}
-          onSubmit={handleSubmit}
-          submitLabel={isEdit ? "Save changes" : "Add student"}
-        />
+        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <StudentForm
+            initialValues={initialValues ?? undefined}
+            onSubmit={handleSubmit}
+            submitLabel={isEdit ? "Save changes" : "Add student"}
+          />
+        </div>
       )}
     </div>
   );
