@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
 function LoginPage() {
@@ -89,6 +89,15 @@ function LoginPage() {
             {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            className="font-medium text-blue-600 hover:underline"
+          >
+            Register
+          </Link>
+        </p>
       </div>
     </div>
   );
