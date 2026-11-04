@@ -3,12 +3,14 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/useAuth";
 import StudentForm from "../components/StudentForm";
+import { useToast } from "../context/useToast";
 
 function StudentFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const { token, logout } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [initialValues, setInitialValues] = useState(null);
   const [loading, setLoading] = useState(isEdit);
@@ -52,6 +54,7 @@ function StudentFormPage() {
         body: values,
         token,
       });
+      showToast(isEdit ? "Student updated" : "Student added");
       navigate("/students");
     } catch (err) {
       if (err.status === 401) {

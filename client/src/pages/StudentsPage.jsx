@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/useAuth";
 import { useDebounce } from "../hooks/useDebounce";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { useToast } from "../context/useToast";
 
 const PAGE_SIZE = 10;
 
 function StudentsPage() {
   const { token, user, logout } = useAuth();
   const isAdmin = user?.role === "ADMIN";
+  const { showToast } = useToast();
 
   const [students, setStudents] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -17,7 +20,8 @@ function StudentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadCount, setReloadCount] = useState(0);
-
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const debouncedSearch = useDebounce(search);
 
   useEffect(() => {
@@ -62,19 +66,18 @@ function StudentsPage() {
     setPage(1);
   };
 
-  const handleDelete = async (student) => {
-    const confirmed = window.confirm(
-      `Delete ${student.firstName} ${student.lastName}? This cannot be undone.`,
-    );
-    if (!confirmed) return;
-
-    setError("");
+  const confirmDelete = async () => {
+    const student = studentToDelete;
+    setDeleting(true);
 
     try {
       await apiRequest(`/api/students/${student.id}`, {
         method: "DELETE",
         token,
       });
+
+      setStudentToDelete(null);
+      showToast(`${student.firstName} ${student.lastName} was deleted`);
 
       // Deleted the last row on a page? Step back one page.
       if (students.length === 1 && page > 1) {
@@ -83,8 +86,11 @@ function StudentsPage() {
         setReloadCount((c) => c + 1);
       }
     } catch (err) {
+      setStudentToDelete(null);
       if (err.status === 401) logout();
-      else setError(err.message);
+      else showToast(err.message, "error");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -97,7 +103,8 @@ function StudentsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Students</h1>
           {pagination && (
             <p className="text-sm text-gray-500">
-              {pagination.total} {pagination.total === 1 ? "student" : "students"}
+              {pagination.total}{" "}
+              {pagination.total === 1 ? "student" : "students"}
             </p>
           )}
         </div>
@@ -206,7 +213,7 @@ function StudentsPage() {
                           Edit
                         </Link>
                         <button
-                          onClick={() => handleDelete(student)}
+                          onClick={() => setStudentToDelete(student)}
                           className="ml-4 font-medium text-red-600 hover:underline"
                         >
                           Delete
@@ -241,6 +248,16 @@ function StudentsPage() {
             Next
           </button>
         </div>
+      )}
+
+      {studentToDelete && (
+        <ConfirmDialog
+          title="Delete student?"
+          message={`${studentToDelete.firstName} ${studentToDelete.lastName} will be permanently removed. This cannot be undone.`}
+          busy={deleting}
+          onConfirm={confirmDelete}
+          onCancel={() => setStudentToDelete(null)}
+        />
       )}
     </div>
   );
