@@ -5,3 +5,8 @@
     @apply bg-gray-50 text-gray-900 antialiased;
   }
 }
+
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
