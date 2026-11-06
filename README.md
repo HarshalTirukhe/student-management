@@ -116,6 +116,174 @@ server/                 Express API
 - **Public sign-up** means anyone can create a read-only account. That suits a demo with fake data. For real records, user creation would be admin-only.
 - **Prisma 6 is used on purpose.** Upgrading to Prisma 7 is tracked as a separate issue.
 
-## Documentation
+## API documentation
 
-API documentation and local setup instructions are coming in the next sections.
+Base URL: `https://student-management-api-jsjk.onrender.com`
+
+All request and response bodies are JSON. Protected routes need the header `Authorization: Bearer <token>`, where the token comes from `POST /api/auth/login`.
+
+### Endpoints
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/health` | Public | Health check |
+| POST | `/api/auth/register` | Public | Create a viewer account |
+| POST | `/api/auth/login` | Public | Log in and receive a JWT |
+| GET | `/api/auth/me` | Any user | Current user |
+| GET | `/api/students` | Any user | List students (paginated, searchable) |
+| GET | `/api/students/:id` | Any user | Get one student |
+| POST | `/api/students` | **Admin** | Create a student |
+| PUT | `/api/students/:id` | **Admin** | Replace a student's fields |
+| DELETE | `/api/students/:id` | **Admin** | Delete a student |
+
+### Authentication
+
+#### `POST /api/auth/register`
+
+Creates an account. The role is always `VIEWER`, and any `role` field in the request is ignored. Limited to 10 sign-ups per IP per hour.
+
+```json
+{ "name": "Test User", "email": "test@example.com", "password": "password123" }
+```
+
+| Field | Rule |
+|---|---|
+| `name` | Required |
+| `email` | Valid email, unique |
+| `password` | At least 8 characters |
+
+**201 Created**
+
+```json
+{
+  "id": 3,
+  "name": "Test User",
+  "email": "test@example.com",
+  "role": "VIEWER",
+  "createdAt": "2026-11-06T10:15:30.000Z"
+}
+```
+
+Errors: `400` validation failed, `409` email already registered, `429` too many sign-ups.
+
+#### `POST /api/auth/login`
+
+```json
+{ "email": "admin@demo.com", "password": "DemoAdmin123" }
+```
+
+**200 OK**
+
+```json
+{
+  "token": "eyJhbGciOi...",
+  "user": { "id": 1, "name": "Demo Admin", "email": "admin@demo.com", "role": "ADMIN" }
+}
+```
+
+The token expires after one day. Errors: `400` validation failed, `401` invalid email or password (the same message for both cases), `429` after 5 failed attempts from one IP in 15 minutes.
+
+#### `GET /api/auth/me`
+
+Returns the logged-in user: `id`, `name`, `email`, `role`, `createdAt`. Errors: `401`.
+
+### Students
+
+A student looks like this:
+
+```json
+{
+  "id": 1,
+  "firstName": "Aarav",
+  "lastName": "Sharma",
+  "email": "aarav.sharma@example.com",
+  "rollNumber": "CS101",
+  "course": "Computer Science",
+  "dateOfBirth": "2003-02-11T00:00:00.000Z",
+  "createdAt": "2026-11-06T09:00:00.000Z",
+  "updatedAt": "2026-11-06T09:00:00.000Z"
+}
+```
+
+#### `GET /api/students`
+
+| Query parameter | Default | Description |
+|---|---|---|
+| `page` | `1` | Page number |
+| `limit` | `10` | Page size, maximum 100 |
+| `search` | none | Case-insensitive match on first name, last name, email or roll number |
+
+Results are sorted newest first.
+
+**200 OK**
+
+```json
+{
+  "data": [ { "id": 15, "firstName": "Siddharth", "...": "..." } ],
+  "pagination": { "page": 1, "limit": 10, "total": 15, "totalPages": 2 }
+}
+```
+
+#### `GET /api/students/:id`
+
+Returns one student. Errors: `400` id is not a number, `404` not found.
+
+#### `POST /api/students` (admin)
+
+```json
+{
+  "firstName": "Tanvi",
+  "lastName": "Mehta",
+  "email": "tanvi.mehta@example.com",
+  "rollNumber": "CS201",
+  "course": "Computer Science",
+  "dateOfBirth": "2003-08-15"
+}
+```
+
+| Field | Rule |
+|---|---|
+| `firstName`, `lastName`, `course` | Required |
+| `email` | Valid email, unique |
+| `rollNumber` | Required, unique |
+| `dateOfBirth` | A valid date, not in the future |
+
+**201 Created** returns the student. Errors: `400` validation failed, `403` not an admin, `409` duplicate email or roll number.
+
+#### `PUT /api/students/:id` (admin)
+
+Takes the same body and rules as create. All fields are required, because this replaces the student's data. **200 OK** returns the updated student. Errors: `400`, `403`, `404`, `409`.
+
+#### `DELETE /api/students/:id` (admin)
+
+**204 No Content** with an empty body. Errors: `400`, `403`, `404`.
+
+### Error format
+
+Every error is JSON with a `message`. Validation errors also list the failing fields:
+
+```json
+{
+  "message": "Validation failed",
+  "errors": [
+    { "field": "email", "message": "Invalid email address" },
+    { "field": "firstName", "message": "First name is required" }
+  ]
+}
+```
+
+| Status | Meaning |
+|---|---|
+| `400` | Invalid input, bad id, or malformed JSON |
+| `401` | Missing, invalid or expired token, or wrong login |
+| `403` | Logged in, but the role isn't allowed |
+| `404` | Student not found |
+| `409` | Duplicate email or roll number |
+| `429` | Rate limit hit |
+| `500` | Unexpected server error (details are logged, not returned) |
+git branch
+git status
+git add README.md
+git commit -m "docs: add API documentation"
+git push -u origin docs/api-documentation
+git log --oneline -2
