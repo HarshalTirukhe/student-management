@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/useAuth";
 import { useToast } from "../context/useToast";
+import PasswordInput from "../components/PasswordInput";
 
 const fields = [
   { name: "name", label: "Full name", type: "text", autoComplete: "name" },
@@ -118,21 +119,33 @@ function RegisterPage() {
                 >
                   {label}
                 </label>
-                <input
-                  id={name}
-                  name={name}
-                  type={type}
-                  autoComplete={autoComplete}
-                  value={values[name]}
-                  onChange={handleChange}
-                  aria-invalid={hasError}
-                  aria-describedby={hasError ? `${name}-error` : undefined}
-                  className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
-                    hasError
-                      ? "border-red-400 focus:border-red-500 focus:ring-red-200"
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
-                  }`}
-                />
+                {type === "password" ? (
+                  <PasswordInput
+                    id={name}
+                    name={name}
+                    value={values[name]}
+                    onChange={handleChange}
+                    autoComplete={autoComplete}
+                    invalid={hasError}
+                    describedBy={hasError ? `${name}-error` : undefined}
+                  />
+                ) : (
+                  <input
+                    id={name}
+                    name={name}
+                    type={type}
+                    autoComplete={autoComplete}
+                    value={values[name]}
+                    onChange={handleChange}
+                    aria-invalid={hasError}
+                    aria-describedby={hasError ? `${name}-error` : undefined}
+                    className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                      hasError
+                        ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
+                  />
+                )}
                 {hint && !hasError && (
                   <p className="mt-1 text-xs text-gray-500">{hint}</p>
                 )}
@@ -169,7 +182,10 @@ function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{" "}
-          <Link to="/login" className="font-medium text-blue-600 hover:underline">
+          <Link
+            to="/login"
+            className="font-medium text-blue-600 hover:underline"
+          >
             Log in
           </Link>
         </p>
