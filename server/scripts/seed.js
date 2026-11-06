@@ -1,4 +1,4 @@
-require("dotenv").config({ override: true });
+require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const prisma = require("../src/lib/prisma");
 
@@ -144,8 +144,8 @@ const demoStudents = [
 ];
 
 async function main() {
-  const dbName = new URL(process.env.DATABASE_URL).pathname.slice(1);
-  console.log(`Seeding database: ${dbName}`);
+  const dbUrl = new URL(process.env.DATABASE_URL);
+  console.log(`Seeding database: ${dbUrl.pathname.slice(1)} on ${dbUrl.host}`);
   const reset = process.argv.includes("--reset");
 
   // Demo accounts: created if missing, otherwise put back to a known state
