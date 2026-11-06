@@ -116,6 +116,173 @@ server/                 Express API
 - **Public sign-up** means anyone can create a read-only account. That suits a demo with fake data. For real records, user creation would be admin-only.
 - **Prisma 6 is used on purpose.** Upgrading to Prisma 7 is tracked as a separate issue.
 
+## Getting started
+
+### Prerequisites
+
+- Node.js 22 or newer (developed on Node 24)
+- Git
+- PostgreSQL 16 or newer, running locally
+
+### 1. Clone and create the database
+
+```bash
+git clone https://github.com/HarshalTirukhe/student-management.git
+cd student-management
+```
+
+Create an empty database. In `psql` or pgAdmin's query tool:
+
+```sql
+CREATE DATABASE student_management;
+```
+
+### 2. Set up the API
+
+```bash
+cd server
+npm install
+```
+
+Copy the example environment file and fill it in:
+
+```bash
+# macOS / Linux
+cp .env.example .env
+
+# Windows (Command Prompt)
+copy .env.example .env
+```
+
+Open `server/.env` and set:
+
+- `DATABASE_URL`: your PostgreSQL password, and your port if it isn't 5432
+- `JWT_SECRET`: a long random string. Generate one with:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+Then create the tables, load demo data and start the API:
+
+```bash
+npx prisma generate
+npx prisma migrate deploy
+npm run seed
+npm run dev
+```
+
+The API runs at http://localhost:5000. Check http://localhost:5000/health.
+
+### 3. Set up the frontend
+
+In a second terminal:
+
+```bash
+cd client
+npm install
+```
+
+```bash
+# macOS / Linux
+cp .env.example .env
+
+# Windows (Command Prompt)
+copy .env.example .env
+```
+
+```bash
+npm run dev
+```
+
+Open http://localhost:5173 and log in with the demo accounts from the table above (`admin@demo.com` / `DemoAdmin123`).
+
+## Environment variables
+
+### API (`server/.env`)
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `JWT_SECRET` | Yes | Secret used to sign login tokens. Keep it private |
+| `JWT_EXPIRES_IN` | No | Token lifetime. Defaults to `1d` |
+| `CLIENT_URL` | No | Allowed frontend origin(s) for CORS, comma-separated, no trailing slash. Defaults to `http://localhost:5173` |
+| `PORT` | No | Defaults to `5000` |
+| `NODE_ENV` | No | Set to `production` when deployed. Enables `trust proxy` for correct rate-limit IPs |
+| `DEMO_ADMIN_PASSWORD`, `DEMO_VIEWER_PASSWORD` | No | Override the demo account passwords used by the seed script |
+
+The API refuses to start if `DATABASE_URL` or `JWT_SECRET` is missing.
+
+### Frontend (`client/.env`)
+
+| Variable | Description |
+|---|---|
+| `VITE_API_URL` | Base URL of the API, no trailing slash. It is baked in at build time, so changing it needs a rebuild |
+
+## Scripts
+
+Run these from `server/`:
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the API with auto-restart |
+| `npm start` | Start the API (used in production) |
+| `npm test` | Run the API tests |
+| `npm run seed` | Create the demo accounts and sample students. Safe to run more than once |
+| `npm run seed:reset` | Same, but deletes all students first. Never run it against real data |
+
+Run these from `client/`:
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the dev server |
+| `npm run build` | Build for production |
+| `npm run lint` | Check the code with ESLint |
+
+## Running the tests
+
+The tests delete data, so they use a **separate database**, and refuse to run unless the database name contains `test`.
+
+```sql
+CREATE DATABASE student_management_test;
+```
+
+```bash
+cd server
+
+# macOS / Linux
+cp .env.test.example .env.test
+
+# Windows (Command Prompt)
+copy .env.test.example .env.test
+```
+
+Edit `server/.env.test` with your PostgreSQL password and port, then create the tables in the test database:
+
+```bash
+# macOS / Linux
+DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/student_management_test" npx prisma migrate deploy
+
+# Windows (Command Prompt)
+set "DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/student_management_test" && npx prisma migrate deploy
+```
+
+Run the suite:
+
+```bash
+npm test
+```
+
+## Deployment
+
+| Part | Host | Notes |
+|---|---|---|
+| Database | Neon (PostgreSQL) | Use the direct connection string, not the pooled one, so migrations work |
+| API | Render (web service) | Root directory `server`. Build: `npm install && npx prisma generate && npx prisma migrate deploy`. Start: `npm start`. Needs `NODE_ENV=production`, `DATABASE_URL`, `JWT_SECRET` and `CLIENT_URL` |
+| Frontend | Vercel | Root directory `client`. Needs `VITE_API_URL`. `client/vercel.json` rewrites every path to `index.html` so deep links like `/students` don't 404 |
+
+Both hosts redeploy automatically when `main` changes.
+
 ## API documentation
 
 Base URL: `https://student-management-api-jsjk.onrender.com`
